@@ -10,3 +10,5 @@ def save_html_to_file(html_content: str, filename: str) -> None:
     """
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html_content)
+
+
