@@ -6,11 +6,14 @@ from bs4 import BeautifulSoup
 
 
 def get_cards(response_soup):
-
+    """
+    return card found in a soup (html response soup)
+    """
     classes = ["transition", "justify-between", "rounded-md", "shadow-md"]
     cards = find_with_all_classes(soup,classes)
     
-    return cards
+    if cards : return cards
+    else : return []
 
 def get_title(card):
     """
@@ -23,8 +26,8 @@ def get_title(card):
     title_classes = ["text-sm", "font-semibold", "w-fit", "line-clamp-3", "text-pretty"]
     title = find_with_classes(card,title_classes)
     
-    return title.text
-    
+    if title : return title.text
+    else : return ""
 
 def get_volume(card):
     """
@@ -38,17 +41,92 @@ def get_volume(card):
     card_footer_classes = ["flex", "gap-2", "justify-between", "items-center", "w-full", "overflow-x-auto", "whitespace-nowrap"]
     card_footer = find_with_classes(card, card_footer_classes)
     
-    
     # get volume
     volume_classes = ["flex", "items-center", "gap-1"]
     volume = find_with_classes(card_footer, volume_classes)
     
-    return volume.text
+    if volume : return volume.text
+    else : return ""
     
 
+def get_prop_title(prop):
+    """
+    return prop title
+    """
+    prop_title_classes = ["flex", "flex-1", "gap-2", "items-center", "min-w-0", "group", "cursor-pointer"]
+    prop_title = find_with_classes(prop,prop_title_classes)
+    
+    if prop_title : return prop_title.text
+    else : ""
+
+def get_prop_chances(prop): 
+    """
+    return prop title
+    """
+    prop_chances_classes = ["font-semibold", "text-text-primary", "mr-1"]
+    prop_chances = find_with_classes(prop,prop_chances_classes)
+    
+    if prop_chances : return prop_chances.text
+    else : ""
+
+def get_yes_no_chances(prop):
+    """
+    return yes oe no chances in an array
+    """
+    btns = prop.select("button")
+    
+    if btns :
+        choices = []
+        for btn in btns :
+            a = [e.text for e in btn.select("span")]
+            choices.append(a)
+        return choices
+    
+    else : 
+        return []
+
+def get_gauge_details(card):
+    gauge_classes = ["flex", "flex-col", "items-center", "w-full" ,"-translate-y-[30px]"]
+    gauge = find_with_classes(card,gauge_classes)
+    
+    if gauge : return gauge.text
+    else : return ""
+
+def get_props_details(card):
+    """
+    return prop soup list in a card
+    """
+    props_classes = ["flex", "justify-between", "items-center", "gap-4", "w-full", "h-fit", "shrink-0"]
+    props = find_with_all_classes(card,props_classes)
+    
+    if props :
+        props_detail = []
+        for prop in props :
+            #prop = props[0]
+            data = {}
+            data["prop_title"] = get_prop_title(prop)
+            data["prop_chances"] = get_prop_chances(prop)
+            data["yes_no_chances"] = get_yes_no_chances(prop)
+            
+            props_detail.append(data)
+            
+        return props_detail
+    else : return []
+
+def get_card_detail(card):
+    data = {}
+    
+    data["title"] = get_title(card)
+    data["volume"] = get_volume(card)
+    data["props_detail"] = get_props_details(card)
+    data["gauge_detail"] = get_gauge_details(card)
+    
+    
+    return data
 
 if __name__ == "__main__" :
     culture_url = "https://polymarket.com/pop-culture"
+    news_url = "https://polymarket.com/new"
     response = website_crawler(culture_url)
     
     #response = website_rendering(culture_url, wait_in_seconds=5, scroll=3)    # forbiden
@@ -56,8 +134,17 @@ if __name__ == "__main__" :
     soup = BeautifulSoup(response)
     cards = get_cards(soup)
     
-    res = []
+    if cards :
+        results = []
+        
+        for card in cards :
+            card_detail = get_card_detail(card)
+            
+            results.append(card_detail)
     
+    
+
+    """
     for card in cards :
         data = {}
         
@@ -65,4 +152,4 @@ if __name__ == "__main__" :
         data["volume"] = get_volume(card)
         
         res.append(data)
-        
+    """
