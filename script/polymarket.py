@@ -5,7 +5,7 @@ from utils.selector import find_with_all_classes, find_with_classes
 from bs4 import BeautifulSoup
 
 
-def get_cards(response_soup):
+def get_cards(soup):
     """
     return card found in a soup (html response soup)
     """
@@ -28,7 +28,17 @@ def get_title(card):
     
     if title : return title.text
     else : return ""
+    
+def get_link(card):
+    """
+    Return absolute or relative link of the card.
+    """
+    a_tag = card.find("a", href=True)
+    if not a_tag:
+        return ""
+    return a_tag["href"]
 
+ 
 def get_volume(card):
     """
     input : 
@@ -120,7 +130,7 @@ def get_card_detail(card):
     data["volume"] = get_volume(card)
     data["props_detail"] = get_props_details(card)
     data["gauge_detail"] = get_gauge_details(card)
-    
+    data["link"] = get_link(card)
     
     return data
 
@@ -139,11 +149,8 @@ if __name__ == "__main__" :
         
         for card in cards :
             card_detail = get_card_detail(card)
-            
             results.append(card_detail)
     
-    
-
     """
     for card in cards :
         data = {}
