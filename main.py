@@ -9,8 +9,8 @@ from script.piloterr import website_crawler
 from script.polymarket import get_card_detail, get_cards
 from bs4 import BeautifulSoup
 
-news_url = "https://polymarket.com/new"
-response = website_crawler(news_url)
+url = "https://polymarket.com/tech"
+response = website_crawler(url)
 
 
 soup = BeautifulSoup(response)

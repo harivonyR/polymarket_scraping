@@ -39,6 +39,8 @@ def get_link(card):
     return a_tag["href"]
 
  
+    
+
 def get_volume(card):
     """
     input : 
