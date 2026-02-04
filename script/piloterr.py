@@ -68,7 +68,6 @@ if __name__ == "__main__" :
     
     save_html_to_file(response, "output/index.html")
 
-
     url = "https://clob.polymarket.com/price"
     
     response = requests.get(url)

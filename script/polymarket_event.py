@@ -36,11 +36,9 @@ def get_link(card):
     a_tag = card.find("a", href=True)
     if not a_tag:
         return ""
-    return a_tag["href"]
+    return "https://polymarket.com"+a_tag["href"]
 
  
-    
-
 def get_volume(card):
     """
     input : 
@@ -65,7 +63,7 @@ def get_prop_title(prop):
     """
     return prop title
     """
-    prop_title_classes = ["flex", "flex-1", "gap-2", "items-center", "min-w-0", "group", "cursor-pointer"]
+    prop_title_classes = ["overflow-hidden", "text-ellipsis", "whitespace-nowrap", "max-w-[280px]", "my-auto"]
     prop_title = find_with_classes(prop,prop_title_classes)
     
     if prop_title : return prop_title.text
@@ -75,7 +73,7 @@ def get_prop_chances(prop):
     """
     return prop title
     """
-    prop_chances_classes = ["font-semibold", "text-text-primary", "mr-1"]
+    prop_chances_classes = ["font-medium", "text-[28px]", "text-text-primary"]
     prop_chances = find_with_classes(prop,prop_chances_classes)
     
     if prop_chances : return prop_chances.text
@@ -108,7 +106,7 @@ def get_props_details(card):
     """
     return prop soup list in a card
     """
-    props_classes = ["flex", "justify-between", "items-center", "gap-4", "w-full", "h-fit", "shrink-0"]
+    props_classes = ["w-full", "flex", "flex-row", "justify-between", "min-h-12", "z-1"]
     props = find_with_all_classes(card,props_classes)
     
     if props :
@@ -136,29 +134,29 @@ def get_card_detail(card):
     
     return data
 
-if __name__ == "__main__" :
-    culture_url = "https://polymarket.com/pop-culture"
-    news_url = "https://polymarket.com/new"
-    response = website_crawler(culture_url)
+def scrape_category_events(section_url):
+    """
+    Take a category url as input and return top events
     
-    #response = website_rendering(culture_url, wait_in_seconds=5, scroll=3)    # forbiden
-    
+    """
+    response = website_crawler(section_url)
+
     soup = BeautifulSoup(response)
     cards = get_cards(soup)
-    
+
     if cards :
         results = []
-        
+    
         for card in cards :
             card_detail = get_card_detail(card)
             results.append(card_detail)
+            
+    return results
+
+if __name__ == "__main__" :
+    acquired_companies_before_2027= "https://polymarket.com/event/which-companies-will-be-acquired-before-2027"
+    response = website_crawler(acquired_companies_before_2027)
     
-    """
-    for card in cards :
-        data = {}
-        
-        data["title"] = get_title(card)
-        data["volume"] = get_volume(card)
-        
-        res.append(data)
-    """
+    soup = BeautifulSoup(response)
+    
+    props = get_props_details(soup)
