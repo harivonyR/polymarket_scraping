@@ -5,59 +5,36 @@ from utils.selector import find_with_all_classes, find_with_classes
 from bs4 import BeautifulSoup
 
 
-def get_cards(soup):
-    """
-    return card found in a soup (html response soup)
-    """
-    classes = ["transition", "justify-between", "rounded-md", "shadow-md"]
-    cards = find_with_all_classes(soup,classes)
-    
-    if cards : return cards
-    else : return []
-
-def get_title(card):
-    """
-    input : 
-        card : a beautifull soup object of a polymarket card on item list
-    
-    output :
-        title : a string representing the title of the card
-    """
-    title_classes = ["text-sm", "font-semibold", "w-fit", "line-clamp-3", "text-pretty"]
-    title = find_with_classes(card,title_classes)
+def get_event_title(event):
+    title_classes = ["!font-semibold", "!text-2xl", "text-pretty"]
+    title = find_with_classes(event,title_classes)
     
     if title : return title.text
     else : return ""
     
-def get_link(card):
-    """
-    Return absolute or relative link of the card.
-    """
-    a_tag = card.find("a", href=True)
-    if not a_tag:
-        return ""
-    return "https://polymarket.com"+a_tag["href"]
-
  
-def get_volume(card):
-    """
-    input : 
-        card : a beautifull soup object of a polymarket card on item list
-    
-    output :
-        title : a string representing the volume placed in an item (can be a text e.g. : new)
-    """
+def get_event_volume(event):
     # get the card footer
-    card_footer_classes = ["flex", "gap-2", "justify-between", "items-center", "w-full", "overflow-x-auto", "whitespace-nowrap"]
-    card_footer = find_with_classes(card, card_footer_classes)
-    
-    # get volume
-    volume_classes = ["flex", "items-center", "gap-1"]
-    volume = find_with_classes(card_footer, volume_classes)
+    volume_classes = ["text-text-primary", "text-[13px]", "font-medium", "whitespace-nowrap"]
+    volume = find_with_classes(event, volume_classes)
     
     if volume : return volume.text
     else : return ""
     
+def get_event_category(event):
+    categories_classes = ["flex", "items-center", "gap-1"]
+    categories = find_with_classes(event, categories_classes)
+    
+    if categories : return categories.text.split("·")
+    else : return []
+
+def get_event_end(event):
+    event_end_classes = ["text-[13px]", "text-text-secondary", "gap-1.5", "whitespace-nowrap", "flex", "items-center", "md:mr-1"]
+    
+    event_end = find_with_classes(event, event_end_classes)
+    
+    if event_end : return event_end.text
+    else : return ""
 
 def get_prop_title(prop):
     """
@@ -95,12 +72,13 @@ def get_yes_no_chances(prop):
     else : 
         return []
 
-def get_gauge_details(card):
-    gauge_classes = ["flex", "flex-col", "items-center", "w-full" ,"-translate-y-[30px]"]
-    gauge = find_with_classes(card,gauge_classes)
+def get_prop_volume(prop):
+    prop_volume_classes = ["text-xs", "text-text-secondary", "whitespace-nowrap"]
+    prop_volume = find_with_classes(prop,prop_volume_classes)
     
-    if gauge : return gauge.text
-    else : return ""
+    if prop_volume : return prop_volume.text
+    else : ""
+    
 
 def get_props_details(card):
     """
@@ -117,46 +95,29 @@ def get_props_details(card):
             data["prop_title"] = get_prop_title(prop)
             data["prop_chances"] = get_prop_chances(prop)
             data["yes_no_chances"] = get_yes_no_chances(prop)
+            data["prop_volume"] = get_prop_volume(prop)
             
             props_detail.append(data)
             
         return props_detail
     else : return []
 
-def get_card_detail(card):
+def get_event_detail(event):
     data = {}
     
-    data["title"] = get_title(card)
-    data["volume"] = get_volume(card)
-    data["props_detail"] = get_props_details(card)
-    data["gauge_detail"] = get_gauge_details(card)
-    data["link"] = get_link(card)
+    data["title"] = get_event_title(event)
+    data["volume"] = get_event_volume(event)
+    data["event_end"] = get_event_end(event)
+    data["categories"] = get_event_category(event)
+    data["proposition"] = get_props_details(event)
     
     return data
 
-def scrape_category_events(section_url):
-    """
-    Take a category url as input and return top events
-    
-    """
-    response = website_crawler(section_url)
-
-    soup = BeautifulSoup(response)
-    cards = get_cards(soup)
-
-    if cards :
-        results = []
-    
-        for card in cards :
-            card_detail = get_card_detail(card)
-            results.append(card_detail)
-            
-    return results
 
 if __name__ == "__main__" :
     acquired_companies_before_2027= "https://polymarket.com/event/which-companies-will-be-acquired-before-2027"
     response = website_crawler(acquired_companies_before_2027)
     
-    soup = BeautifulSoup(response)
+    event_soup = BeautifulSoup(response)
     
-    props = get_props_details(soup)
+    event_detail = get_event_detail(event_soup)

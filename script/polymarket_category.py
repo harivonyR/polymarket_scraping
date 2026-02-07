@@ -134,7 +134,7 @@ def get_card_detail(card):
     
     return data
 
-def scrape_categories_event(section_url):
+def get_event_lists(section_url):
     """
     Take a category url as input and return top events
     
@@ -155,6 +155,5 @@ def scrape_categories_event(section_url):
 
 if __name__ == "__main__" :
     pop_culture_url = "https://polymarket.com/pop-culture"
-    results = scrape_categories_event(pop_culture_url)
-    
+    event_list = get_event_lists(pop_culture_url)
     
