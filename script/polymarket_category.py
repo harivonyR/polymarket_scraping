@@ -1,159 +1,131 @@
 # -*- coding: utf-8 -*-
 
-from script.piloterr import website_crawler, website_rendering
+from script.piloterr import website_crawler
 from utils.selector import find_with_all_classes, find_with_classes
 from bs4 import BeautifulSoup
 
 
+# ============================================================
+# CSS SELECTORS (centralized for tutorial readability)
+# ============================================================
+
+CARD_CLASSES = ["transition", "justify-between", "rounded-md", "shadow-md"]
+CARD_TITLE_CLASSES = ["text-sm", "font-semibold", "w-fit", "line-clamp-3", "text-pretty"]
+CARD_FOOTER_CLASSES = ["flex", "gap-2", "justify-between", "items-center", "w-full", "overflow-x-auto", "whitespace-nowrap"]
+CARD_VOLUME_CLASSES = ["flex", "items-center", "gap-1"]
+
+GAUGE_CLASSES = ["flex", "flex-col", "items-center", "w-full", "-translate-y-[30px]"]
+
+PROP_CONTAINER_CLASSES = ["flex", "justify-between", "items-center", "gap-4", "w-full", "h-fit", "shrink-0"]
+PROP_TITLE_CLASSES = ["flex", "flex-1", "gap-2", "items-center", "min-w-0", "group", "cursor-pointer"]
+PROP_CHANCES_CLASSES = ["font-semibold", "text-text-primary", "mr-1"]
+
+
+# ============================================================
+# CARD LEVEL EXTRACTION
+# ============================================================
+
 def get_cards(soup):
-    """
-    return card found in a soup (html response soup)
-    """
-    classes = ["transition", "justify-between", "rounded-md", "shadow-md"]
-    cards = find_with_all_classes(soup,classes)
-    
-    if cards : return cards
-    else : return []
+    return find_with_all_classes(soup, CARD_CLASSES) or []
+
 
 def get_title(card):
-    """
-    input : 
-        card : a beautifull soup object of a polymarket card on item list
-    
-    output :
-        title : a string representing the title of the card
-    """
-    title_classes = ["text-sm", "font-semibold", "w-fit", "line-clamp-3", "text-pretty"]
-    title = find_with_classes(card,title_classes)
-    
-    if title : return title.text
-    else : return ""
-    
+    title = find_with_classes(card, CARD_TITLE_CLASSES)
+    return title.text if title else ""
+
+
 def get_link(card):
-    """
-    Return absolute or relative link of the card.
-    """
     a_tag = card.find("a", href=True)
-    if not a_tag:
-        return ""
-    return "https://polymarket.com"+a_tag["href"]
+    return f"https://polymarket.com{a_tag['href']}" if a_tag else ""
 
- 
+
 def get_volume(card):
-    """
-    input : 
-        card : a beautifull soup object of a polymarket card on item list
-    
-    output :
-        title : a string representing the volume placed in an item (can be a text e.g. : new)
-    """
-    # get the card footer
-    card_footer_classes = ["flex", "gap-2", "justify-between", "items-center", "w-full", "overflow-x-auto", "whitespace-nowrap"]
-    card_footer = find_with_classes(card, card_footer_classes)
-    
-    # get volume
-    volume_classes = ["flex", "items-center", "gap-1"]
-    volume = find_with_classes(card_footer, volume_classes)
-    
-    if volume : return volume.text
-    else : return ""
-    
+    footer = find_with_classes(card, CARD_FOOTER_CLASSES)
+    if not footer:
+        return ""
 
-def get_prop_title(prop):
-    """
-    return prop title
-    """
-    prop_title_classes = ["flex", "flex-1", "gap-2", "items-center", "min-w-0", "group", "cursor-pointer"]
-    prop_title = find_with_classes(prop,prop_title_classes)
-    
-    if prop_title : return prop_title.text
-    else : ""
+    volume = find_with_classes(footer, CARD_VOLUME_CLASSES)
+    return volume.text if volume else ""
 
-def get_prop_chances(prop): 
-    """
-    return prop title
-    """
-    prop_chances_classes = ["font-semibold", "text-text-primary", "mr-1"]
-    prop_chances = find_with_classes(prop,prop_chances_classes)
-    
-    if prop_chances : return prop_chances.text
-    else : ""
-
-def get_yes_no_chances(prop):
-    """
-    return yes oe no chances in an array
-    """
-    btns = prop.select("button")
-    
-    if btns :
-        choices = []
-        for btn in btns :
-            a = [e.text for e in btn.select("span")]
-            choices.append(a)
-        return choices
-    
-    else : 
-        return []
 
 def get_gauge_details(card):
-    gauge_classes = ["flex", "flex-col", "items-center", "w-full" ,"-translate-y-[30px]"]
-    gauge = find_with_classes(card,gauge_classes)
-    
-    if gauge : return gauge.text
-    else : return ""
+    gauge = find_with_classes(card, GAUGE_CLASSES)
+    return gauge.text if gauge else ""
+
+
+# ============================================================
+# PROPOSITION LEVEL EXTRACTION
+# ============================================================
+
+def get_prop_title(prop):
+    title = find_with_classes(prop, PROP_TITLE_CLASSES)
+    return title.text if title else ""
+
+
+def get_prop_chances(prop):
+    chances = find_with_classes(prop, PROP_CHANCES_CLASSES)
+    return chances.text if chances else ""
+
+
+def get_yes_no_chances(prop):
+    buttons = prop.select("button")
+    if not buttons:
+        return []
+
+    return [
+        [span.text for span in button.select("span")]
+        for button in buttons
+    ]
+
 
 def get_props_details(card):
-    """
-    return prop soup list in a card
-    """
-    props_classes = ["flex", "justify-between", "items-center", "gap-4", "w-full", "h-fit", "shrink-0"]
-    props = find_with_all_classes(card,props_classes)
-    
-    if props :
-        props_detail = []
-        for prop in props :
-            #prop = props[0]
-            data = {}
-            data["prop_title"] = get_prop_title(prop)
-            data["prop_chances"] = get_prop_chances(prop)
-            data["yes_no_chances"] = get_yes_no_chances(prop)
-            
-            props_detail.append(data)
-            
-        return props_detail
-    else : return []
+    props = find_with_all_classes(card, PROP_CONTAINER_CLASSES)
+    if not props:
+        return []
 
-def get_card_detail(card):
-    data = {}
-    
-    data["title"] = get_title(card)
-    data["volume"] = get_volume(card)
-    data["props_detail"] = get_props_details(card)
-    data["gauge_detail"] = get_gauge_details(card)
-    data["link"] = get_link(card)
-    
-    return data
+    results = []
 
-def get_top_events_by_category(section_url):
-    """
-    Take a category url as input and return top events
-    
-    """
-    response = website_crawler(section_url)
+    for prop in props:
+        results.append({
+            "prop_title": get_prop_title(prop),
+            "prop_chances": get_prop_chances(prop),
+            "yes_no_chances": get_yes_no_chances(prop),
+        })
 
-    soup = BeautifulSoup(response)
-    cards = get_cards(soup)
-
-    if cards :
-        results = []
-    
-        for card in cards :
-            card_detail = get_card_detail(card)
-            results.append(card_detail)
-            
     return results
 
-if __name__ == "__main__" :
+
+# ============================================================
+# CARD AGGREGATION
+# ============================================================
+
+def get_card_detail(card):
+    return {
+        "title": get_title(card),
+        "volume": get_volume(card),
+        "props_detail": get_props_details(card),
+        "gauge_detail": get_gauge_details(card),
+        "link": get_link(card),
+    }
+
+
+# ============================================================
+# PUBLIC API
+# ============================================================
+
+def get_top_events_by_category(category_url):
+    response = website_crawler(category_url)
+    soup = BeautifulSoup(response)
+
+    cards = get_cards(soup)
+
+    return [get_card_detail(card) for card in cards]
+
+
+# ============================================================
+# LOCAL TEST
+# ============================================================
+
+if __name__ == "__main__":
     pop_culture_url = "https://polymarket.com/pop-culture"
     event_list = get_top_events_by_category(pop_culture_url)
-    
