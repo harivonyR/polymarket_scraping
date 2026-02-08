@@ -102,7 +102,11 @@ def get_props_details(card):
         return props_detail
     else : return []
 
-def get_event_detail(event):
+def extract_event_detail(event_url):
+    response = website_crawler(event_url)
+    
+    event = BeautifulSoup(response)
+    
     data = {}
     
     data["title"] = get_event_title(event)
@@ -120,4 +124,4 @@ if __name__ == "__main__" :
     
     event_soup = BeautifulSoup(response)
     
-    event_detail = get_event_detail(event_soup)
+    event_detail = extract_event_detail(event_soup)
